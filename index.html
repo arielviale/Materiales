@@ -1,41 +1,260 @@
-
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="es">
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lab Report: Thermal Treatments of Steel</title>
+    <title>Informe de Laboratorio: Tratamientos Térmicos del Acero</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-      /* For custom scrollbar aesthetics */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1e293b;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #475569;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #64748b;
-      }
+        /* Estilos personalizados para scrollbar y un aspecto más pulido */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .prose-custom { color: #cbd5e1; }
+        .prose-custom h1, .prose-custom h2, .prose-custom h3 { color: #f1f5f9; }
+        .prose-custom p { margin-bottom: 1em; }
+        .prose-custom ul { list-style-type: disc; padding-left: 1.5em; }
+        .prose-custom li { margin-bottom: 0.5em; }
+        .prose-custom code { background-color: #334155; padding: 0.2em 0.4em; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.3.0"
-  }
-}
-</script>
 </head>
-  <body class="bg-slate-900">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+<body class="bg-slate-900 text-slate-300 font-sans leading-relaxed">
+    <div id="app">
+        <!-- Header -->
+        <header 
+            id="header"
+            class="relative bg-cover bg-center py-24 shadow-lg"
+            style="background-image: url('images/header-bg.jpg');"
+        >
+            <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
+            <div class="container relative mx-auto px-4 md:px-6 text-center">
+                <p class="text-sky-400 font-semibold">Tecnicatura Superior en Mecatrónica - Materiales</p>
+                <h1 class="text-4xl md:text-5xl font-bold text-white mt-2">TP 02: Tratamientos Térmicos</h1>
+                <p class="text-slate-300 mt-2">Estudiantes: Gomez Gervasio, Rodrigo Mateo, Francisconi Diego, Zapata Esteban, Martinez Ariel | Docente: Ing. Bernardo Mendez</p>
+            </div>
+        </header>
+        
+        <main>
+            <!-- Sections will be injected here by JavaScript -->
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-950 py-6">
+            <div class="container mx-auto px-4 md:px-6 text-center text-slate-500">
+                <p>Generado con HTML, Tailwind CSS y la API de Google Gemini.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { GoogleGenAI } from "https://aistudiocdn.com/@google/genai@^1.29.0";
+
+        // --- CONFIGURACIÓN DE LA APLICACIÓN ---
+        const config = {
+            labPhotos: [
+                { src: 'images/horno.jpg', alt: 'Horno Mufla utilizado en el ensayo' },
+                { src: 'images/pinzas.jpg', alt: 'Pinzas y guantes térmicos' },
+                { src: 'images/muestras.jpg', alt: 'Muestras de acero después del temple' },
+            ],
+            resultsData: [
+                { id: 1, medium: 'Agua', initialHardness: '40 HRB', finalHardness: '50.6 HRC', variation: '+26.5%', observations: 'Color gris oscuro, sin fisuras visibles.' },
+                { id: 2, medium: 'Aceite', initialHardness: '64.6 HRB', finalHardness: '70.5 HRC', variation: '+9.1%', observations: 'Superficie más oscura, leve deformación.' },
+                { id: 3, medium: 'Aceite (Acero B)', initialHardness: '52.1 HRB', finalHardness: '76.6 HRC', variation: '+47.0%', observations: 'Sin cambios dimensionales notorios.' },
+            ],
+            chartData: {
+                labels: ['Barra 1 (Agua)', 'Barra 2 (Aceite)', 'Barra 3 (Acero B)'],
+                initial: [40, 64.6, 52.1],
+                final: [50.6, 70.5, 76.6] // Se grafican valores directos
+            },
+            conclusionQuestions: [
+                { key: 'q1', text: '¿Qué medio de enfriamiento produjo mayor dureza? ¿Por qué?', prompt: 'In steel quenching, which cooling medium (water or oil) produces greater hardness and why? Explain the metallurgical principles, including cooling rates and microstructural transformations like martensite formation. Format the response in Markdown.' },
+                { key: 'q2', text: '¿Qué relación existe entre la velocidad de enfriamiento y la formación de martensita?', prompt: 'Describe the relationship between the cooling rate and martensite formation in steel. Why is a critical cooling rate necessary? Format the response in Markdown.' },
+                { key: 'q3', text: '¿Qué tipo de estructura cristalina se forma en el acero templado?', prompt: 'What is the primary crystal structure formed in quenched steel that is responsible for its high hardness? Describe its characteristics (e.g., Body-Centered Tetragonal - BCT) and why it is so hard and brittle. Format the response in Markdown.' },
+                { key: 'q4', text: '¿Qué ventajas y desventajas presenta el templado en agua respecto del templado en aceite?', prompt: 'Compare and contrast water quenching versus oil quenching for steel. Discuss the advantages and disadvantages of each in terms of final hardness, risk of cracking, distortion, and typical applications. Format the response in Markdown.' },
+                { key: 'q5', text: '¿Qué hipótesis pueden plantearse sobre la composición de los aceros según su respuesta al templado?', prompt: 'Based on different hardness outcomes after quenching, what hypotheses can be made about the chemical composition of different steels? Specifically, discuss the role of carbon content and alloying elements on hardenability. Format the response in Markdown.' },
+            ]
+        };
+
+        // --- SERVICIO GEMINI ---
+        const API_KEY = process.env.API_KEY;
+        if (!API_KEY) {
+            document.body.innerHTML = `<div class="bg-red-900 text-white p-8 text-center text-lg"><strong>Error:</strong> La API Key no está configurada. Por favor, asegúrese de que la variable de entorno API_KEY esté disponible.</div>`;
+            throw new Error("API_KEY environment variable not set.");
+        }
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+        async function getGenerativeContent(prompt) {
+            try {
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: prompt,
+                });
+                return response.text;
+            } catch (error) {
+                console.error("Error al llamar a la API de Gemini:", error);
+                return `**Error:** No se pudo obtener la respuesta de la IA. Por favor, inténtelo de nuevo. <br><small>${error.message}</small>`;
+            }
+        }
+        
+        // --- RENDERIZADO DE COMPONENTES ---
+
+        function renderSection(title, content, className = '') {
+            return `
+                <section class="py-12 md:py-16 ${className}">
+                    <div class="container mx-auto px-4 md:px-6">
+                        <h2 class="text-3xl md:text-4xl font-bold text-center text-sky-400 mb-8 md:mb-12">${title}</h2>
+                        ${content}
+                    </div>
+                </section>
+            `;
+        }
+
+        function handleGenerateInsight(button, key, prompt) {
+            const container = button.closest('.gemini-insight-container');
+            const outputDiv = container.querySelector('.gemini-output');
+            const errorDiv = container.querySelector('.gemini-error');
+
+            button.disabled = true;
+            button.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generando...`;
+            outputDiv.innerHTML = '';
+            errorDiv.innerHTML = '';
+
+            getGenerativeContent(prompt).then(response => {
+                if (response.startsWith('**Error:**')) {
+                     errorDiv.innerHTML = response;
+                } else {
+                    outputDiv.innerHTML = marked.parse(response);
+                }
+            }).catch(err => {
+                errorDiv.innerHTML = `<strong>Error inesperado:</strong> ${err.message}`;
+            }).finally(() => {
+                button.disabled = false;
+                button.innerHTML = 'Generar Explicación con IA';
+            });
+        }
+        
+        // --- INICIALIZACIÓN DE LA APLICACIÓN ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const main = document.querySelector('main');
+            
+            // Render all sections
+            main.innerHTML = `
+                ${renderSection('Objetivos del Ensayo', `
+                    <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">Comprender el principio del tratamiento térmico de templado en aceros.</div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">Observar los cambios en la dureza producidos por diferentes medios de enfriamiento.</div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">Analizar la relación entre estructura cristalina y propiedades mecánicas.</div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">Comparar el comportamiento de distintos aceros ante el mismo tratamiento.</div>
+                    </div>
+                `)}
+
+                ${renderSection('Conceptos Teóricos: El Templado', `
+                    <div class="max-w-3xl mx-auto text-center text-lg">
+                        <p class="mb-4">El templado es un tratamiento térmico que incrementa la dureza y resistencia del acero. Consiste en calentar el material a una temperatura crítica para formar austenita, y luego enfriarlo bruscamente. Este enfriamiento rápido transforma la austenita en martensita, una estructura cristalina extremadamente dura y frágil, responsable del aumento de las propiedades mecánicas.</p>
+                        <p>La velocidad de enfriamiento es crucial: el agua proporciona un enfriamiento muy rápido, resultando en máxima dureza pero con alto riesgo de fisuras. El aceite, un medio más suave, reduce estos riesgos a costa de una dureza ligeramente menor.</p>
+                        <div class="mt-6 p-4 rounded-lg bg-slate-800 border border-slate-700 gemini-insight-container">
+                             <button class="gemini-button mb-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500 disabled:bg-slate-500 disabled:cursor-not-allowed" data-key="theory" data-prompt="Explain the science behind steel quenching for a college student. Cover the phase transformations from austenite to martensite, the role of cooling rates, and compare water vs. oil as quenching media. Use analogies if helpful. Format the response in Markdown.">Generar Explicación con IA</button>
+                             <div class="gemini-error text-red-400"></div>
+                             <div class="gemini-output prose-custom max-w-none"></div>
+                        </div>
+                    </div>
+                `, 'bg-slate-950')}
+
+                ${renderSection('Resultados Obtenidos', `
+                    <div class="grid lg:grid-cols-5 gap-8 items-start">
+                        <div class="lg:col-span-3">
+                            <h3 class="text-2xl font-bold text-white mb-4 text-center">Tabla de Dureza</h3>
+                             <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-800"><th class="p-3 font-semibold text-sm text-sky-400 border-b-2 border-slate-700">Barra</th><th class="p-3 font-semibold text-sm text-sky-400 border-b-2 border-slate-700">Medio</th><th class="p-3 font-semibold text-sm text-sky-400 border-b-2 border-slate-700">Dureza Inicial</th><th class="p-3 font-semibold text-sm text-sky-400 border-b-2 border-slate-700">Dureza Final</th><th class="p-3 font-semibold text-sm text-sky-400 border-b-2 border-slate-700">Variación</th></tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-700">
+                                        ${config.resultsData.map(row => `
+                                            <tr class="bg-slate-800/50 hover:bg-slate-800 transition-colors duration-200">
+                                                <td class="p-3">${row.id}</td><td class="p-3">${row.medium}</td><td class="p-3">${row.initialHardness}</td><td class="p-3 font-bold text-green-400">${row.finalHardness}</td><td class="p-3 font-bold text-green-400">${row.variation}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <h3 class="text-2xl font-bold text-white mb-4 text-center">Comparación Gráfica</h3>
+                             <div class="w-full h-80 bg-slate-800 p-4 rounded-lg border border-slate-700">
+                                <canvas id="hardnessChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="mt-12">
+                        <h3 class="text-2xl font-bold text-white mb-4 text-center">Galería del Laboratorio</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            ${config.labPhotos.map((photo, index) => `
+                                <img src="${photo.src}" alt="${photo.alt}" class="w-full h-auto object-cover rounded-lg shadow-lg border-2 border-slate-700 hover:border-sky-500 transition-all duration-300 transform hover:scale-105" />
+                            `).join('')}
+                        </div>
+                    </div>
+                `, 'bg-slate-950')}
+                
+                ${renderSection('Análisis y Conclusiones', `
+                    <div class="max-w-4xl mx-auto space-y-6">
+                      ${config.conclusionQuestions.map(q => `
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700 gemini-insight-container">
+                            <p class="font-semibold text-lg text-slate-200">${q.text}</p>
+                            <div class="mt-4">
+                               <button class="gemini-button mb-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500 disabled:bg-slate-500 disabled:cursor-not-allowed" data-key="${q.key}" data-prompt="${q.prompt}">Generar Explicación con IA</button>
+                               <div class="gemini-error text-red-400"></div>
+                               <div class="gemini-output prose-custom max-w-none"></div>
+                            </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                `)}
+            `;
+
+            // Initialize Chart.js
+            const ctx = document.getElementById('hardnessChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: config.chartData.labels,
+                    datasets: [
+                        { label: 'Dureza Inicial', data: config.chartData.initial, backgroundColor: '#60a5fa', borderColor: '#3b82f6', borderWidth: 1 },
+                        { label: 'Dureza Final (Templado)', data: config.chartData.final, backgroundColor: '#4ade80', borderColor: '#22c55e', borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#cbd5e1' } } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: '#94a3b8' }, 
+                            grid: { color: '#334155' },
+                            title: { display: true, text: 'Dureza (Escala Relativa)', color: '#94a3b8' }
+                        },
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+
+            // Add event listeners for all Gemini buttons
+            document.querySelectorAll('.gemini-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    handleGenerateInsight(button, button.dataset.key, button.dataset.prompt);
+                });
+            });
+        });
+    </script>
+</body>
 </html>
