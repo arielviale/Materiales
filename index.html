@@ -199,7 +199,8 @@
                         <h3 class="text-2xl font-bold text-white mb-4 text-center">Galería del Laboratorio</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             ${config.labPhotos.map((photo, index) => `
-                                <img src="${photo.src}" alt="${photo.alt}" class="w-full h-auto object-cover rounded-lg shadow-lg border-2 border-slate-700 hover:border-sky-500 transition-all duration-300 transform hover:scale-105" />
+                                <!-- ⚡ Bolt: Lazy load images to improve initial page load performance -->
+                                <img src="${photo.src}" alt="${photo.alt}" loading="lazy" class="w-full h-auto object-cover rounded-lg shadow-lg border-2 border-slate-700 hover:border-sky-500 transition-all duration-300 transform hover:scale-105" />
                             `).join('')}
                         </div>
                     </div>
