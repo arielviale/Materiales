@@ -6,10 +6,15 @@
     <title>Informe de Laboratorio: Tratamientos Térmicos del Acero</title>
     <!-- ⚡ Bolt: Preloading LCP image to improve load time -->
     <link rel="preload" as="image" href="images/header-bg.jpg">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ⚡ Bolt: Preconnect to CDNs to reduce connection setup latency -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://aistudiocdn.com">
+    <!-- ⚡ Bolt: Pin CDN versions to avoid redirects and improve caching -->
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <!-- ⚡ Bolt: Defer non-critical scripts to unblock rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" defer></script>
     <style>
         /* Estilos personalizados para scrollbar y un aspecto más pulido */
         ::-webkit-scrollbar { width: 8px; }
