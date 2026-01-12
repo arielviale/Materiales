@@ -4,12 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Informe de Laboratorio: Tratamientos Térmicos del Acero</title>
+    <!-- ⚡ Bolt: Preconnect to CDNs to reduce connection latency -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://aistudiocdn.com">
     <!-- ⚡ Bolt: Preloading LCP image to improve load time -->
     <link rel="preload" as="image" href="images/header-bg.jpg">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ⚡ Bolt: Defer non-critical scripts to unblock rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <!-- ⚡ Bolt: Defer non-critical scripts to unblock rendering and use pinned versions -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" defer></script>
     <style>
         /* Estilos personalizados para scrollbar y un aspecto más pulido */
         ::-webkit-scrollbar { width: 8px; }
@@ -53,7 +57,7 @@
     </div>
 
     <script type="module">
-        import { GoogleGenAI } from "https://aistudiocdn.com/@google/genai@^1.29.0";
+        import { GoogleGenAI } from "https://aistudiocdn.com/@google/genai@1.35.0";
 
         // --- CONFIGURACIÓN DE LA APLICACIÓN ---
         const config = {
