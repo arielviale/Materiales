@@ -88,14 +88,39 @@
             throw new Error("API_KEY environment variable not set.");
         }
         const ai = new GoogleGenAI({ apiKey: API_KEY });
+        const CACHE_VERSION = 'v1';
+
+        // Simple hash function for cache keys
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash |= 0; // Convert to 32bit integer
+            }
+            return hash;
+        }
 
         async function getGenerativeContent(prompt) {
+            const cacheKey = `gemini_cache_${CACHE_VERSION}_${simpleHash(prompt)}`;
+            const cached = localStorage.getItem(cacheKey);
+
+            if (cached) {
+                return cached;
+            }
+
             try {
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });
-                return response.text;
+                const text = response.text;
+                try {
+                    localStorage.setItem(cacheKey, text);
+                } catch (e) {
+                    console.warn('LocalStorage quota exceeded or unavailable', e);
+                }
+                return text;
             } catch (error) {
                 console.error("Error al llamar a la API de Gemini:", error);
                 return `**Error:** No se pudo obtener la respuesta de la IA. Por favor, inténtelo de nuevo. <br><small>${error.message}</small>`;
