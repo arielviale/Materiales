@@ -6,6 +6,8 @@
     <title>Informe de Laboratorio: Tratamientos Térmicos del Acero</title>
     <!-- ⚡ Bolt: Preloading LCP image to improve load time -->
     <link rel="preload" as="image" href="images/header-bg.jpg">
+    <!-- ⚡ Bolt: Preconnect to AI CDN to reduce latency -->
+    <link rel="preconnect" href="https://aistudiocdn.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- ⚡ Bolt: Defer non-critical scripts to unblock rendering -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
@@ -89,13 +91,36 @@
         }
         const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         async function getGenerativeContent(prompt) {
             try {
+                // ⚡ Bolt: Check cache first to avoid redundant API calls
+                const hash = await sha256(prompt);
+                const cacheKey = `gemini_cache_v1_${hash}`;
+                const cachedResponse = localStorage.getItem(cacheKey);
+
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });
-                return response.text;
+
+                const text = response.text;
+                try {
+                    localStorage.setItem(cacheKey, text);
+                } catch (e) {
+                    console.warn('Failed to save to localStorage', e);
+                }
+                return text;
             } catch (error) {
                 console.error("Error al llamar a la API de Gemini:", error);
                 return `**Error:** No se pudo obtener la respuesta de la IA. Por favor, inténtelo de nuevo. <br><small>${error.message}</small>`;
