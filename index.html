@@ -90,11 +90,38 @@
         const ai = new GoogleGenAI({ apiKey: API_KEY });
 
         async function getGenerativeContent(prompt) {
+            // ⚡ Bolt: Cache check (skip if no crypto/insecure)
+            let cacheKey;
+            try {
+                if (window.crypto && crypto.subtle) {
+                    const msgBuffer = new TextEncoder().encode(prompt);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                    const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+                    cacheKey = `gemini_cache_v1_${hash}`;
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) {
+                        console.log("Bolt ⚡: Serving from cache");
+                        return cached;
+                    }
+                }
+            } catch (e) {
+                console.warn("Bolt ⚡: Cache lookup failed", e);
+            }
+
             try {
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });
+
+                // ⚡ Bolt: Store successful response
+                if (response.text && cacheKey) {
+                    try {
+                        localStorage.setItem(cacheKey, response.text);
+                    } catch (e) {
+                        console.warn("Bolt ⚡: Cache write failed (quota?)", e);
+                    }
+                }
                 return response.text;
             } catch (error) {
                 console.error("Error al llamar a la API de Gemini:", error);
