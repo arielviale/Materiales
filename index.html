@@ -115,10 +115,22 @@
             `;
         }
 
-        function handleGenerateInsight(button, key, prompt) {
+        async function handleGenerateInsight(button, key, prompt) {
             const container = button.closest('.gemini-insight-container');
             const outputDiv = container.querySelector('.gemini-output');
             const errorDiv = container.querySelector('.gemini-error');
+            const CACHE_KEY = `gemini_cache_v1_${key}`;
+
+            // ⚡ Bolt: Check cache to avoid expensive API calls
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    outputDiv.innerHTML = marked.parse(cached);
+                    return;
+                }
+            } catch (e) {
+                console.warn('LocalStorage access denied', e);
+            }
 
             button.disabled = true;
             button.innerHTML = `
@@ -130,18 +142,25 @@
             outputDiv.innerHTML = '';
             errorDiv.innerHTML = '';
 
-            getGenerativeContent(prompt).then(response => {
+            try {
+                const response = await getGenerativeContent(prompt);
                 if (response.startsWith('**Error:**')) {
                      errorDiv.innerHTML = response;
                 } else {
                     outputDiv.innerHTML = marked.parse(response);
+                    // ⚡ Bolt: Cache successful response
+                    try {
+                        localStorage.setItem(CACHE_KEY, response);
+                    } catch (e) {
+                         console.warn('LocalStorage write failed', e);
+                    }
                 }
-            }).catch(err => {
+            } catch (err) {
                 errorDiv.innerHTML = `<strong>Error inesperado:</strong> ${err.message}`;
-            }).finally(() => {
+            } finally {
                 button.disabled = false;
                 button.innerHTML = 'Generar Explicación con IA';
-            });
+            }
         }
         
         // --- INICIALIZACIÓN DE LA APLICACIÓN ---
