@@ -6,10 +6,15 @@
     <title>Informe de Laboratorio: Tratamientos Térmicos del Acero</title>
     <!-- ⚡ Bolt: Preloading LCP image to improve load time -->
     <link rel="preload" as="image" href="images/header-bg.jpg">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ⚡ Bolt: Preconnect to CDNs to reduce latency -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://aistudiocdn.com" crossorigin>
+
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <!-- ⚡ Bolt: Defer non-critical scripts to unblock rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" defer></script>
     <style>
         /* Estilos personalizados para scrollbar y un aspecto más pulido */
         ::-webkit-scrollbar { width: 8px; }
@@ -120,6 +125,21 @@
             const outputDiv = container.querySelector('.gemini-output');
             const errorDiv = container.querySelector('.gemini-error');
 
+            // ⚡ Bolt: Check cache first to avoid API call
+            const cacheKey = `gemini_cache_v1_${key}`;
+            let cached = null;
+            try {
+                cached = localStorage.getItem(cacheKey);
+            } catch (e) {
+                console.warn('LocalStorage access failed:', e);
+            }
+
+            if (cached) {
+                outputDiv.innerHTML = marked.parse(cached);
+                errorDiv.innerHTML = '';
+                return;
+            }
+
             button.disabled = true;
             button.innerHTML = `
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -135,6 +155,12 @@
                      errorDiv.innerHTML = response;
                 } else {
                     outputDiv.innerHTML = marked.parse(response);
+                    // ⚡ Bolt: Cache success response
+                    try {
+                        localStorage.setItem(cacheKey, response);
+                    } catch (e) {
+                        console.warn('Cache full or disabled:', e);
+                    }
                 }
             }).catch(err => {
                 errorDiv.innerHTML = `<strong>Error inesperado:</strong> ${err.message}`;
