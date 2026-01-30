@@ -89,13 +89,34 @@
         }
         const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-        async function getGenerativeContent(prompt) {
+        async function getGenerativeContent(prompt, key) {
+            // ⚡ Bolt: Check local storage for cached response to avoid API call
+            const cacheKey = `gemini_cache_v1_${key}`;
+            if (key) {
+                try {
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) return cached;
+                } catch (e) {
+                    console.warn('LocalStorage access failed', e);
+                }
+            }
+
             try {
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });
-                return response.text;
+                const text = response.text;
+
+                // ⚡ Bolt: Cache successful response for future use
+                if (key && text) {
+                     try {
+                        localStorage.setItem(cacheKey, text);
+                    } catch (e) {
+                        console.warn('LocalStorage write failed', e);
+                    }
+                }
+                return text;
             } catch (error) {
                 console.error("Error al llamar a la API de Gemini:", error);
                 return `**Error:** No se pudo obtener la respuesta de la IA. Por favor, inténtelo de nuevo. <br><small>${error.message}</small>`;
@@ -130,7 +151,7 @@
             outputDiv.innerHTML = '';
             errorDiv.innerHTML = '';
 
-            getGenerativeContent(prompt).then(response => {
+            getGenerativeContent(prompt, key).then(response => {
                 if (response.startsWith('**Error:**')) {
                      errorDiv.innerHTML = response;
                 } else {
