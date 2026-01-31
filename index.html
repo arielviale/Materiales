@@ -89,13 +89,41 @@
         }
         const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+        // Helper to generate a consistent hash for cache keys
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash |= 0; // Convert to 32bit integer
+            }
+            return hash;
+        }
+
         async function getGenerativeContent(prompt) {
+            // ⚡ Bolt: Cache API responses to reduce network calls and latency
+            // using a hash of the prompt ensures we return fresh content if the prompt changes.
+            const cacheKey = `gemini_cache_v1_${simpleHash(prompt)}`;
+
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) return cached;
+            } catch (e) {
+                console.warn('LocalStorage access failed:', e);
+            }
+
             try {
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });
-                return response.text;
+                const text = response.text;
+                try {
+                    localStorage.setItem(cacheKey, text);
+                } catch (e) {
+                    console.warn('LocalStorage write failed:', e);
+                }
+                return text;
             } catch (error) {
                 console.error("Error al llamar a la API de Gemini:", error);
                 return `**Error:** No se pudo obtener la respuesta de la IA. Por favor, inténtelo de nuevo. <br><small>${error.message}</small>`;
